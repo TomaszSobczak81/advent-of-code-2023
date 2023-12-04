@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  console:
+    build: '.'
+    logging:
+      options:
+        max-file: '1'
+        max-size: '1m'
+    networks:
+      - 'default'
+    volumes:
+      - '${PWD}:/mnt/app'
+      - '${HOME}/.ssh:/home/code/.ssh:ro'
+
+networks:
+  default:
+    driver: 'bridge'
