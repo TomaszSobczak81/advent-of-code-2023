@@ -43,16 +43,36 @@ impl Task {
     }
 
     fn compute_part_two(&self, version: String) -> String {
-        let s = self.load_input("2".to_string(), version.clone());
-        let input: Vec<_> = s.lines().map(|line| self.normalize_input_line(line)).collect();
+        let input = self.load_input("2".to_string(), version.to_string());
+        let lines: Vec<_> = input.lines().map(|line| self.normalize_input_line(line)).collect();
 
-        return self.compute(input.join("\n"));
+        return self.compute(lines.join("\n"));
     }
 
     fn normalize_input_line(&self, line: &str) -> String {
         let mut result = line.to_string();
+        let mapping = std::collections::HashMap::from([
+            ("zero", "0"),
+            ("one", "1"),
+            ("two", "2"),
+            ("three", "3"),
+            ("four", "4"),
+            ("five", "5"),
+            ("six", "6"),
+            ("seven", "7"),
+            ("eight", "8"),
+            ("nine", "9")
+        ]);
+        let pattern = mapping.keys().map(|s| s.to_string()).collect::<Vec<_>>().join("|");
+        let re = Regex::new(&pattern).unwrap();
 
-        //TODO: Analuzye and normalize input line
+        let mut finding = re.find(&result);
+
+        while let Some(f) = finding {
+            let re2 = Regex::new(f.as_str()).unwrap();
+            result = re2.replace(&result, &**mapping.get(f.as_str()).unwrap()).to_string();
+            finding = re.find(&result);
+        }
 
         return result;
     }
