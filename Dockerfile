@@ -3,7 +3,7 @@ FROM rust:1.74.0-alpine3.18
 ARG UID
 ARG GID
 
-RUN apk add --update --no-cache bash git
+RUN apk add --update --no-cache bash git musl-dev
 
 WORKDIR /mnt/app
 
