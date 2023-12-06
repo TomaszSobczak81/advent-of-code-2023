@@ -50,8 +50,7 @@ impl Task {
     }
 
     fn normalize_input_line(&self, line: &str) -> String {
-        let mut result = line.to_string();
-        let mapping = std::collections::HashMap::from([
+        let forward_mapping = std::collections::HashMap::from([
             ("zero", "0"),
             ("one", "1"),
             ("two", "2"),
@@ -63,26 +62,57 @@ impl Task {
             ("eight", "8"),
             ("nine", "9")
         ]);
-        let pattern = mapping.keys().map(|s| s.to_string()).collect::<Vec<_>>().join("|");
-        let re = Regex::new(&pattern).unwrap();
 
-        let mut finding = re.find(&result);
+        let reverse_mapping = std::collections::HashMap::from([
+            ("orez", "0"),
+            ("eno", "1"),
+            ("owt", "2"),
+            ("eerht", "3"),
+            ("ruof", "4"),
+            ("evif", "5"),
+            ("xis", "6"),
+            ("neves", "7"),
+            ("thgie", "8"),
+            ("enin", "9")
+        ]);
 
-        while let Some(f) = finding {
-            let re2 = Regex::new(f.as_str()).unwrap();
-            result = re2.replace(&result, &**mapping.get(f.as_str()).unwrap()).to_string();
-            finding = re.find(&result);
+        let forward_pattern = forward_mapping.keys().map(|s| s.to_string()).collect::<Vec<_>>().join("|");
+        let reverse_pattern = reverse_mapping.keys().map(|s| s.to_string()).collect::<Vec<_>>().join("|");
+
+        let numeral_regex = Regex::new(r"(\d)").unwrap();
+        let forward_regex = Regex::new(&forward_pattern).unwrap();
+        let reverse_regex = Regex::new(&reverse_pattern).unwrap();
+
+        let mut result = line.to_string();
+        let mut finding = forward_regex.find(&result);
+
+        if let Some(f) = finding {
+            let number = numeral_regex.find(&result);
+            if number.is_none() || number.unwrap().start() > f.start() {
+                result = forward_regex.replace(&result, &**forward_mapping.get(f.as_str()).unwrap()).to_string();
+            }
         }
 
-        return result;
+        result = crate::aoc::str_reverse(&result); // reverse the line to find on the other side
+        finding = reverse_regex.find(&result);
+
+        if let Some(f) = finding {
+            let number = numeral_regex.find(&result);
+            if number.is_none() || number.unwrap().start() > f.start() {
+                result = reverse_regex.replace(&result, &**reverse_mapping.get(f.as_str()).unwrap()).to_string();
+            }
+        }
+
+        result = crate::aoc::str_reverse(&result); // back to initial order
+        result
     }
 
     fn compute(&self, input: String) -> String {
         let mut result: i32 = 0;
+        let re = Regex::new(r"(\d)").unwrap();
 
         for line in input.lines() {
-            let enil: String = line.chars().rev().collect();
-            let re = Regex::new(r"(\d)").unwrap();
+            let enil = crate::aoc::str_reverse(line);
             let f = re.find(line).unwrap().as_str();
             let l = re.find(enil.as_str()).unwrap().as_str();
 
@@ -97,7 +127,7 @@ impl Task {
         let contents = std::fs::read_to_string(filename)
         .unwrap();
 
-        return contents;
+        contents
     }
 
     pub fn solve(&self) {
