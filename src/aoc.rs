@@ -46,11 +46,7 @@ impl Task {
 }
 
 fn input_load(day: String, part: String, version: String) -> String {
-    let filename = format!("var/input/day{day}_part{part}_{version}.txt");
-    let contents = std::fs::read_to_string(filename)
-    .unwrap();
-
-    contents
+    std::fs::read_to_string(format!("var/input/day{day}_part{part}_{version}.txt")).unwrap()
 }
 
 fn str_reverse(s: &str) -> String {

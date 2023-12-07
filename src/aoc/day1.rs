@@ -6,7 +6,7 @@ impl crate::aoc::Compute for Day1 {
     fn compute_part_one(&self, version: String) -> String {
         let input = crate::aoc::input_load("1".to_string(), "1".to_string(), version.clone());
 
-        return self.compute(input);
+        self.compute(input)
     }
 
     fn compute_part_two(&self, version: String) -> String {
@@ -20,7 +20,7 @@ impl crate::aoc::Compute for Day1 {
         let input = crate::aoc::input_load("1".to_string(), "2".to_string(), version.clone());
         let lines: Vec<_> = input.lines().map(|line| self.normalize_input_line(line, &numeric_regex, &forward_regex, &reverse_regex)).collect();
 
-        return self.compute(lines.join("\n"));
+        self.compute(lines.join("\n"))
     }
 }
 
@@ -37,7 +37,7 @@ impl Day1 {
             result += format!("{}{}", f, l).parse::<i32>().unwrap();
         }
 
-        return result.to_string();
+        result.to_string()
     }
 
     fn forward_mapping(&self) -> std::collections::HashMap<&'static str, &'static str> {
@@ -72,9 +72,8 @@ impl Day1 {
 
     fn normalize_input_line(&self, line: &str, numeric_regex: &regex::Regex, forward_regex: &regex::Regex, reverse_regex: &regex::Regex) -> String {
         let mut result = line.to_string();
-        let mut finding = forward_regex.find(&result);
 
-        if let Some(f) = finding {
+        if let Some(f) = forward_regex.find(&result) {
             let number = numeric_regex.find(&result);
             if number.is_none() || number.unwrap().start() > f.start() {
                 result = forward_regex.replace(&result, &**self.forward_mapping().get(f.as_str()).unwrap()).to_string();
@@ -82,16 +81,14 @@ impl Day1 {
         }
 
         result = crate::aoc::str_reverse(&result); // reverse the line to find on the other side
-        finding = reverse_regex.find(&result);
 
-        if let Some(f) = finding {
+        if let Some(f) = reverse_regex.find(&result) {
             let number = numeric_regex.find(&result);
             if number.is_none() || number.unwrap().start() > f.start() {
                 result = reverse_regex.replace(&result, &**self.reverse_mapping().get(f.as_str()).unwrap()).to_string();
             }
         }
 
-        result = crate::aoc::str_reverse(&result); // back to initial order
-        result
+        crate::aoc::str_reverse(&result) // back to initial order and return
     }
 }
