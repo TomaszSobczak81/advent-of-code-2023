@@ -13,3 +13,4 @@ To make it simply to use for everyone without needs to install any dependencies 
 To run and check solution after exec into container you need to use some CLI commands inside `/mnt/app` directory:
 
 * Use `cargo run day1` to solve Day 1 solutions ([Trebuchet?!](https://adventofcode.com/2023/day/1))
+* Use `cargo run day2` to solve Day 2 solutions ([Cube Conundrum](https://adventofcode.com/2023/day/2))

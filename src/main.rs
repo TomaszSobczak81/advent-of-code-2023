@@ -19,7 +19,7 @@ fn main() {
 
     match aoc.command {
         Some(Commands::Day1(task)) => task.solve(&crate::aoc::day1::Day1, "142".to_string(), "281".to_string()),
-        Some(Commands::Day2(task)) => task.solve(&crate::aoc::day2::Day2, "8".to_string(), "".to_string()),
+        Some(Commands::Day2(task)) => task.solve(&crate::aoc::day2::Day2, "8".to_string(), "2286".to_string()),
         None => println!("No command provided"),
     }
 }
