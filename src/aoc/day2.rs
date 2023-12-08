@@ -59,7 +59,7 @@ struct Game {
     game_id: i32,
     r_cubes: i32,
     g_cubes: i32,
-    b_cubes: i32,
+    b_cubes: i32
 }
 
 impl Game {

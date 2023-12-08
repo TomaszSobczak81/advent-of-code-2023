@@ -4,6 +4,7 @@ use std::time::Instant;
 pub mod day1;
 pub mod day2;
 pub mod day3;
+pub mod day4;
 
 pub trait Compute {
     fn compute_part_one(&self, version: String) -> String;
@@ -47,7 +48,7 @@ impl Task {
 }
 
 fn input_load(day: String, part: String, version: String) -> String {
-    std::fs::read_to_string(format!("var/input/day{day}_part{part}_{version}.txt")).unwrap()
+    std::fs::read_to_string(format!("var/input/{version}/day{day}/part{part}.txt")).unwrap()
 }
 
 fn str_reverse(s: &str) -> String {
