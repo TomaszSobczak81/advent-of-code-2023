@@ -3,6 +3,7 @@ use std::time::Instant;
 
 pub mod day1;
 pub mod day2;
+pub mod day3;
 
 pub trait Compute {
     fn compute_part_one(&self, version: String) -> String;

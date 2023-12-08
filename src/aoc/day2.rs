@@ -3,24 +3,14 @@ pub struct Day2;
 impl crate::aoc::Compute for Day2 {
     fn compute_part_one(&self, version: String) -> String {
         let input = self.input_load("1".to_string(), version.clone());
-        let mut sum: i32 = 0;
-
-        for game in input.iter() {
-            if game.is_valid() {
-                sum += game.game_id;
-            }
-        }
+        let sum: i32 = input.iter().map(|game| game.score()).sum();
 
         sum.to_string()
     }
 
     fn compute_part_two(&self, version: String) -> String {
         let input = self.input_load("2".to_string(), version.clone());
-        let mut sum: i32 = 0;
-
-        for game in input.iter() {
-            sum += game.power();
-        }
+        let sum: i32 = input.iter().map(|game| game.power()).sum();
 
         sum.to_string()
     }
@@ -79,5 +69,12 @@ impl Game {
 
     fn power(&self) -> i32 {
         self.r_cubes * self.g_cubes * self.b_cubes
+    }
+
+    fn score(&self) -> i32 {
+        match self.is_valid() {
+            true => self.game_id,
+            false => 0,
+        }
     }
 }
