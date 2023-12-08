@@ -49,7 +49,6 @@ impl Day4 {
     }
 }
 
-#[derive(Debug)]
 struct Card {
     card_id: i32,
     numbers_on_card: Vec<i32>,
