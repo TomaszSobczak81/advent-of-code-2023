@@ -1,15 +1,14 @@
-use std::collections::LinkedList;
-
 pub struct Day3;
 
 impl crate::aoc::Compute for Day3 {
     fn compute_part_one(&self, version: String) -> String {
         let input = self.input_load("1".to_string(), version.clone());
         let parts = self.collect_parts(&input);
+        let boundaries = Boundaries { x_max: input.num_columns() - 1, x_min: 0, y_max: input.num_rows() - 1, y_min: 0 };
         let mut sum: i32 = 0;
 
         for part in parts.iter() {
-            let adjacents: Vec<char> = part.adjacent_cells().iter().map(|c| input[((*c).y, (*c).x)]).collect();
+            let adjacents: Vec<char> = boundaries.adjacent_cells_for_part(&part).iter().map(|c| input[((*c).y, (*c).x)]).collect();
             
             match adjacents.iter().any(|c| !c.is_digit(10) && *c != '.') {
                 true => sum += part.value,
@@ -23,20 +22,25 @@ impl crate::aoc::Compute for Day3 {
     fn compute_part_two(&self, version: String) -> String {
         let input = self.input_load("2".to_string(), version.clone());
         let parts = self.collect_parts(&input);
+        let boundaries = Boundaries { x_max: input.num_columns() - 1, x_min: 0, y_max: input.num_rows() - 1, y_min: 0 };
+        let mut gears = array2d::Array2D::filled_with(Vec::<i32>::new(), input.num_rows(), input.num_columns());
         let mut sum: i32 = 0;
 
         for part in parts.iter() {
-            let adjacents: Vec<(&Cell, char)> = part.adjacent_cells().iter().map(|c| (c, input[((*c).y, (*c).x)])).collect();
+            let adjacents: Vec<Cell> = boundaries.adjacent_cells_for_part(&part);
 
-            for a in adjacents.iter() {
-                println!("{:?}", a);
+            for cell in adjacents.iter() {
+                if input[((*cell).y, (*cell).x)] == '*' {
+                    gears[((*cell).y, (*cell).x)].push(part.value);
+                    break;
+                }
             }
-            // println!("{:?}", adjacents);
-            
-            // match adjacents.iter().any(|c| !c.is_digit(10) && *c == '*') {
-            //     true => sum += part.value,
-            //     false => (),
-            // }
+        }
+
+        for r in 0..gears.num_rows() {
+            for c in 0..gears.num_columns() {
+                if 2 == gears[(r,c)].len() { sum += gears[(r,c)][0] * gears[(r,c)][1] }
+            }
         }
 
         sum.to_string()
@@ -44,28 +48,28 @@ impl crate::aoc::Compute for Day3 {
 }
 
 impl Day3 {
-    fn collect_parts(&self, grid: &array2d::Array2D<char>) -> LinkedList<Part> {
-        let mut list: LinkedList<Part> = LinkedList::new();
+    fn collect_parts(&self, grid: &array2d::Array2D<char>) -> Vec<Part> {
+        let mut list: Vec<Part> = Vec::new();
 
         for r in 0..grid.num_rows() {
             let mut value: String = "".to_string();
-            let mut cells: LinkedList<Cell> = LinkedList::new();
+            let mut cells: Vec<Cell> = Vec::new();
 
             for c in 0..grid.num_columns() {
                 let v: char = grid[(r,c)];
 
                 if v.is_digit(10) {
                     value.push(v);
-                    cells.push_back(Cell { x: c, y: r });
+                    cells.push(Cell { x: c, y: r });
                 } else if value != "" {
-                    list.push_back(Part { value: value.parse::<i32>().unwrap(), cells: cells, xymax: Cell { x: grid.num_columns() - 1, y: grid.num_rows() - 1 } });
+                    list.push(Part { value: value.parse::<i32>().unwrap(), cells: cells });
                     value = "".to_string();
-                    cells = LinkedList::new();                
+                    cells = Vec::new();
                 }
             }
 
             if value != "" {
-                list.push_back(Part { value: value.parse::<i32>().unwrap(), cells: cells, xymax: Cell { x: grid.num_columns() - 1, y: grid.num_rows() - 1 } });
+                list.push(Part { value: value.parse::<i32>().unwrap(), cells: cells });
             }
         }
 
@@ -78,7 +82,40 @@ impl Day3 {
     }
 }
 
-#[derive(Debug)]
+struct Boundaries {
+    x_max: usize,
+    x_min: usize,
+    y_max: usize,
+    y_min: usize
+}
+
+impl Boundaries {
+    fn adjacent_cells_for_cell(&self, cell: &Cell) -> Vec<Cell> {
+        let mut cells: Vec<Cell> = Vec::new();
+
+        if cell.y > self.y_min { cells.push(Cell {x: cell.x, y: cell.y - 1}) } // north cell
+        if cell.y > self.y_min && cell.x < self.x_max { cells.push(Cell {x: cell.x + 1, y: cell.y - 1}) } // north-east cell
+        if cell.x < self.x_max { cells.push(Cell {x: cell.x + 1, y: cell.y}) } // east cell
+        if cell.y < self.y_max && cell.x < self.x_max { cells.push(Cell {x: cell.x + 1, y: cell.y + 1}) } // south-east cell
+        if cell.y < self.y_max { cells.push(Cell {x: cell.x, y: cell.y + 1}) } // south cell
+        if cell.y < self.y_max && cell.x > self.x_min { cells.push(Cell {x: cell.x - 1, y: cell.y + 1}) } // south-west cell
+        if cell.x > self.x_min { cells.push(Cell {x: cell.x - 1, y: cell.y}) } // west cell
+        if cell.y > self.y_min && cell.x > self.x_min { cells.push(Cell {x: cell.x - 1, y: cell.y - 1}) } // north-west cell
+
+        cells
+    }
+
+    fn adjacent_cells_for_part(&self, part: &Part) -> Vec<Cell> {
+        let mut cells: Vec<Cell> = Vec::new();
+
+        for cell in part.cells.iter() {
+            cells.append(&mut self.adjacent_cells_for_cell(cell));
+        }
+
+        cells
+    }
+}
+
 struct Cell {
     x: usize,
     y: usize
@@ -86,48 +123,5 @@ struct Cell {
 
 struct Part {
     value: i32,
-    cells: LinkedList<Cell>,
-    xymax: Cell
-}
-
-impl Part {
-    fn adjacent_cells(&self) -> Vec<Cell> {
-        let mut cells: Vec<Cell> = Vec::new();
-
-        for cell in self.cells.iter() {
-            if cell.y > 0 { // north cell
-                cells.push(Cell {x: cell.x, y: cell.y - 1});
-            }
-
-            if cell.y > 0 && cell.x < self.xymax.x { // north-east cell
-                cells.push(Cell {x: cell.x + 1, y: cell.y - 1});
-            }
-
-            if cell.x < self.xymax.x { // east cell
-                cells.push(Cell {x: cell.x + 1, y: cell.y});
-            }
-
-            if cell.y < self.xymax.y && cell.x < self.xymax.x { // south-east cell
-                cells.push(Cell {x: cell.x + 1, y: cell.y + 1});
-            }
-
-            if cell.y < self.xymax.y { // south cell
-                cells.push(Cell {x: cell.x, y: cell.y + 1});
-            }
-
-            if cell.y < self.xymax.y && cell.x > 0 { // south-west cell
-                cells.push(Cell {x: cell.x - 1, y: cell.y + 1});
-            }
-
-            if cell.x > 0 { // west cell
-                cells.push(Cell {x: cell.x - 1, y: cell.y});
-            }
-
-            if cell.y > 0 && cell.x > 0 { // north-west cell
-                cells.push(Cell {x: cell.x - 1, y: cell.y - 1});
-            }
-        }
-
-        cells
-    }
+    cells: Vec<Cell>
 }
