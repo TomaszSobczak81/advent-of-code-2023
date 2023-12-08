@@ -15,3 +15,4 @@ To run and check solution after exec into container you need to use some CLI com
 * Use `cargo run day1` to solve Day 1 solutions ([Trebuchet?!](https://adventofcode.com/2023/day/1))
 * Use `cargo run day2` to solve Day 2 solutions ([Cube Conundrum](https://adventofcode.com/2023/day/2))
 * Use `cargo run day3` to solve Day 3 solutions ([Gear Ratios](https://adventofcode.com/2023/day/3))
+* Use `cargo run day4` to solve Day 4 solutions ([Scratchcards](https://adventofcode.com/2023/day/4))
