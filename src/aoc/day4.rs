@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub struct Day4;
 
 impl crate::aoc::Compute for Day4 {
@@ -10,9 +12,21 @@ impl crate::aoc::Compute for Day4 {
 
     fn compute_part_two(&self, version: String) -> String {
         let input = self.input_load("2".to_string(), version.clone());
-        let cards = 1;
+        let mut cards = HashMap::from(input.iter().map(|c| (c.card_id, 1)).collect::<HashMap<i32, i32>>());
 
-        "0".to_string()
+        for card in input.iter() {
+            if !card.has_winning_numbers() { continue; }
+
+            let intersections = card.intersection().len() as i32;
+            let copies_number = cards[&card.card_id];
+            for id in card.card_id + 1..=card.card_id + intersections {
+                if let Some(c) = cards.get_mut(&id) {
+                    *c = *c + copies_number;
+                }
+            }
+        }
+
+        cards.values().sum::<i32>().to_string()
     }
 }
 
@@ -43,6 +57,10 @@ struct Card {
 }
 
 impl Card {
+    fn has_winning_numbers(&self) -> bool {
+        self.intersection().len() > 0
+    }
+
     fn intersection(&self) -> Vec<i32> {
         self.numbers_on_card.iter().filter(|n| self.numbers_winning.contains(n)).map(|n| *n).collect()
     }
