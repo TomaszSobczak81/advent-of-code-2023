@@ -1,3 +1,4 @@
+use array2d::Array2D;
 use clap::Args;
 use std::time::Instant;
 
@@ -55,6 +56,11 @@ impl Task {
 
 fn input_load(day: String, part: String, version: String) -> String {
     std::fs::read_to_string(format!("var/input/{version}/day{day}/part{part}.txt")).unwrap()
+}
+
+fn input_load_as_array2d(day: String, part: String, version: String) -> Array2D<char> {
+    let input = crate::aoc::input_load(day, part, version);
+    Array2D::from_rows(&input.lines().map(|l| l.chars().collect()).collect::<Vec<_>>()).unwrap()
 }
 
 fn math_gcd(a: usize, b: usize) -> usize {
