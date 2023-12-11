@@ -7,6 +7,10 @@ pub mod day3;
 pub mod day4;
 pub mod day5;
 pub mod day6;
+pub mod day7;
+pub mod day8;
+pub mod day9;
+pub mod day10;
 
 pub trait Compute {
     fn compute_part_one(&self, version: String) -> String;
@@ -51,6 +55,14 @@ impl Task {
 
 fn input_load(day: String, part: String, version: String) -> String {
     std::fs::read_to_string(format!("var/input/{version}/day{day}/part{part}.txt")).unwrap()
+}
+
+fn math_gcd(a: usize, b: usize) -> usize {
+    if b == 0 { a } else { math_gcd(b, a % b) }
+}
+
+fn math_lcm(a: usize, b: usize) -> usize {
+    (a * b) / math_gcd(a, b)
 }
 
 fn str_reverse(s: &str) -> String {

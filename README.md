@@ -18,3 +18,7 @@ To run and check solution after exec into container you need to use some CLI com
 * Use `cargo run day4` to solve Day 4 solutions ([Scratchcards](https://adventofcode.com/2023/day/4))
 * Use `cargo run day5` to solve Day 5 solutions ([If You Give A Seed A Fertilizer](https://adventofcode.com/2023/day/5))
 * Use `cargo run day6` to solve Day 6 solutions ([Wait For It](https://adventofcode.com/2023/day/6))
+* Use `cargo run day7` to solve Day 7 solutions ([Camel Cards](https://adventofcode.com/2023/day/7))
+* Use `cargo run day8` to solve Day 8 solutions ([Haunted Wasteland](https://adventofcode.com/2023/day/8))
+* Use `cargo run day9` to solve Day 9 solutions ([Mirage Maintenance](https://adventofcode.com/2023/day/9))
+* Use `cargo run day10` to solve Day 10 solutions ([Pipe Maze](https://adventofcode.com/2023/day/10))
