@@ -9,13 +9,81 @@ impl crate::aoc::Compute for Day10 {
     }
 
     fn compute_part_two(&self, version: String) -> String {
-        "TODO".to_string()
+        let mut input = self.input_load("2".to_string(), version.clone());
+        self.solve_maze(&mut input);
+        self.find_nest(input).to_string()
     }
 }
 
 impl Day10 {
     fn input_load(&self, part: String, version: String) -> Array2D<char> {
         crate::aoc::input_load_as_array2d("10".to_string(), part, version)
+    }
+
+    fn find_nest(&self, mut input: Array2D<char>) -> usize {
+        let num_columns = input.num_columns() - 1;
+        let num_rows = input.num_rows() - 1;
+
+        for (i,r) in input.as_rows().iter().enumerate() {
+            for (j,c) in r.iter().enumerate() {
+                if *c == 'X' {
+                    break;
+                }
+
+                input[(i, j)] = '~';
+            }
+
+            for (j,c) in r.iter().rev().enumerate() {
+                if *c == 'X' {
+                    break;
+                }
+
+                input[(i, num_columns - j)] = '~';
+            }
+        }
+
+        for (i,c) in input.as_columns().iter().enumerate() {
+            for (j,r) in c.iter().enumerate() {
+                if *r == 'X' {
+                    break;
+                }
+
+                input[(j, i)] = '~';
+            }
+
+            for (j,r) in c.iter().rev().enumerate() {
+                if *r == 'X' {
+                    break;
+                }
+
+                input[(num_rows - j, i)] = '~';
+            }
+        }
+
+        // let cells = input.clone().enumerate_row_major().filter(|(_, v)| !"~X".contains(&v.to_string()));
+        // self.process_nest_leftovers(&mut input, cells);
+
+        loop {
+            let binds = input.clone();
+            let cells = binds.enumerate_row_major().filter(|(_, v)| !"~X".contains(&v.to_string()));
+            let count = cells.clone().count();
+
+            for (pos, val) in cells {
+                if self.adjacents_diagonal(&input, &Cell { c: *val, x: pos.1, y: pos.0 }).iter().any(|c| c.c == '~') {
+                    input[pos] = '~';
+                }
+            }
+
+            if count == input.enumerate_row_major().filter(|(_, v)| !"~X".contains(&v.to_string())).count() {
+                break;
+            }
+        }
+
+        for r in input.as_rows() {
+            println!("{:?}", r.iter().collect::<String>());
+        }
+
+        input.enumerate_row_major().filter(|(_, v)| !"~X".contains(&v.to_string())).count()        
     }
 
     fn solve_maze(&self, input: &mut Array2D<char>) -> usize {
@@ -36,6 +104,17 @@ impl Day10 {
         adjacents
     }
 
+    fn adjacents_diagonal(&self, grid: &Array2D<char>, cell: &Cell) -> Vec<Cell> {
+        let mut adjacents: Vec<Cell> = self.adjacents(grid, cell);
+
+        if cell.y > 0 && cell.x < grid.num_columns() - 1 { adjacents.push(Cell { c: grid[(cell.y - 1, cell.x + 1)], x: cell.x + 1, y: cell.y - 1 }) } // north-east cell
+        if cell.y < grid.num_rows() - 1 && cell.x < grid.num_columns() - 1 { adjacents.push(Cell { c: grid[(cell.y + 1, cell.x + 1)], x: cell.x + 1, y: cell.y + 1 }) } // south-east cell
+        if cell.y < grid.num_rows() - 1 && cell.x > 0 { adjacents.push(Cell { c: grid[(cell.y + 1, cell.x - 1)], x: cell.x - 1, y: cell.y + 1 }) } // south-west cell
+        if cell.y > 0 && cell.x > 0 { adjacents.push(Cell { c: grid[(cell.y - 1, cell.x - 1)], x: cell.x - 1, y: cell.y - 1 }) } // north-west cell
+
+        adjacents
+    }
+
     fn process_path(&self, grid: &mut Array2D<char>, path: PipePath) -> PipePath {
         let mut moved = false;
         let mut ppath = path.clone();
@@ -46,7 +125,10 @@ impl Day10 {
         }
 
         match moved {
-            true => self.process_path(grid, ppath),
+            true => {
+                grid[(ppath.curr.y, ppath.curr.x)] = 'X';
+                self.process_path(grid, ppath)
+            },
             false => ppath
         }
     }
