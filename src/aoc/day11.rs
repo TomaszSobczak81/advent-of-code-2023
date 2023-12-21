@@ -15,11 +15,6 @@ impl crate::aoc::Compute for Day11 {
 }
 
 impl Day11 {
-    // TODO: refactor this to optimize the code
-    // Test#1 OK: Got 374 as expected
-    // Part#1 result: 9233514 computed in 17.144688429s
-    // Test#2 OK: Got 82000210 as expected
-    // Part#2 result: 363293506944 computed in 17.102510484s
     fn input_load(&self, part: String, version: String) -> Universe {
         Universe::new(crate::aoc::input_load_as_grid("11".to_string(), part, version))
     }
@@ -32,6 +27,14 @@ struct Universe {
 impl Universe {
     fn new(grid: Grid<char>) -> Self {
         Self { grid }
+    }
+
+    fn find_expandable_cols(&self) -> Vec<usize> {
+        self.grid.iter_cols().enumerate().filter(|(_, c)| c.clone().filter(|c| **c == '#').count() == 0).map(|(i, _)| i).collect::<Vec<usize>>()
+    }
+
+    fn find_expandable_rows(&self) -> Vec<usize> {
+        self.grid.iter_rows().enumerate().filter(|(_, r)| r.clone().filter(|c| **c == '#').count() == 0).map(|(i, _)| i).collect::<Vec<usize>>()
     }
 
     fn galaxies(&self) -> Vec<(usize, usize)> {
@@ -52,17 +55,20 @@ impl Universe {
         pairs
     }
 
-    fn overal_steps(&self, galaxy_expansion: usize) -> usize {
+    fn overal_steps(&self, expansion: usize) -> usize {
         let mut steps = 0;
 
+        let expandable_cols = self.find_expandable_cols();
+        let expandable_rows = self.find_expandable_rows();
+
         for pair in self.pairs() {
-            steps += self.steps_between_pair(pair, galaxy_expansion);
+            steps += self.steps_between_pair(pair, expansion, &expandable_cols, &expandable_rows);
         }
 
         steps
     }
 
-    fn steps_between_pair(&self, pair: ((usize, usize), (usize, usize)), galaxy_expansion: usize) -> usize {
+    fn steps_between_pair(&self, pair: ((usize, usize), (usize, usize)), expansion: usize, expandable_cols: &Vec<usize>, expandable_rows: &Vec<usize>) -> usize {
         let mut steps = 0;
 
         let (x1, y1) = pair.0;
@@ -74,20 +80,12 @@ impl Universe {
         while x != x2 || y != y2 {
             if x != x2 {
                 x = if x < x2 { x + 1 } else { x - 1 };
-                if self.grid.iter_col(x).clone().filter(|c| **c == '#').collect::<Vec<&char>>().is_empty() {
-                    steps += galaxy_expansion;
-                } else {
-                    steps += 1;
-                }
+                steps += if expandable_cols.contains(&x) { expansion } else { 1 };
             }
 
             if y != y2 {
                 y = if y < y2 { y + 1 } else { y - 1 };
-                if self.grid.iter_row(y).clone().filter(|c| **c == '#').collect::<Vec<&char>>().is_empty() {
-                    steps += galaxy_expansion;
-                } else {
-                    steps += 1;
-                }
+                steps += if expandable_rows.contains(&y) { expansion } else { 1 };
             }
         }
 
