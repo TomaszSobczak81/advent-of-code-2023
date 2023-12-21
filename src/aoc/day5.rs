@@ -161,10 +161,9 @@ impl Almanac {
 
     fn process_map_path_range(&self, seed_range: &Range) -> usize {
         let mut cur = seed_range.min;
-        let mut max = seed_range.max;
         let mut val = Vec::new();
 
-        while cur <= max {
+        while cur <= seed_range.max {
             let (loc, skp) = self.process_map_path(cur, "seed".to_string(), usize::MAX);
             cur += skp + 1;
             val.push(loc);

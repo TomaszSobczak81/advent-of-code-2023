@@ -11,11 +11,16 @@ impl crate::aoc::Compute for Day7 {
 }
 
 impl Day7 {
+    // TODO: refactor this to optimize the code
+    // Test#1 OK: Got 6440 as expected
+    // Part#1 result: 252052080 computed in 487.763643ms
+    // Test#2 OK: Got 5905 as expected
+    // Part#2 result: 252898370 computed in 282.341661985s
     fn compute(&self, part: String, version: String) -> String {
         let mut input = self.input_load(part.clone(), version.clone());
         let mut total = 0 as usize;
         
-        input.sort_by(|a, b| a.compare_by_type(&b));
+        input.sort_by(|a, b| a.compare_by_type(&b, true));
         
         for (i, hand) in input.iter().enumerate() {
             total += hand.winning_bid * (i + 1);
@@ -28,11 +33,11 @@ impl Day7 {
         let input = crate::aoc::input_load("7".to_string(), part.clone(), version.clone()); 
         input.lines().map(|line| {
             let mut parts = line.split(" ");
-            HandOfCards {
-                given_cards: parts.next().unwrap().trim().chars().collect(),
-                using_joker: part.eq("2"),
-                winning_bid: parts.next().unwrap().trim().parse::<usize>().unwrap(),
-            }
+            HandOfCards::create(
+                parts.next().unwrap().trim().chars().collect(),
+                part.eq("2"),
+                parts.next().unwrap().trim().parse::<usize>().unwrap()
+            )
         }).collect()
     }
 }
@@ -40,48 +45,62 @@ impl Day7 {
 #[derive(Debug)]
 struct HandOfCards {
     given_cards: Vec<char>,
+    joker_cards: Vec<char>,
     using_joker: bool,
     winning_bid: usize,
 }
 
 impl HandOfCards {
-    fn joker_cards(&self) -> Vec<char> {
-        if self.given_cards.contains(&'J') {
-            let mut cards_map: std::collections::HashMap<char, usize> = std::collections::HashMap::new();
-            // let cards_new = self.given_cards.clone();
+    fn create(given_cards: Vec<char>, using_joker: bool, winning_bid: usize) -> Self {
+        let mut hoc = Self { 
+            given_cards: given_cards, 
+            joker_cards: Vec::new(),
+            using_joker: using_joker, 
+            winning_bid: winning_bid
+        };
 
-            for card in &self.given_cards {
-                *cards_map.entry(*card).or_insert(0) += 1;
-            }
-
-            // promote four of a kind up
-            if cards_map.values().any(|&count| count == 4) {
-                let card_to_promote = cards_map.iter().find(|&(_, &count)| count == 4).unwrap().0;
-                return self.given_cards.iter().map(|c| if (*c).eq(&'J') {*card_to_promote} else {*c}).collect::<Vec<char>>();
-            }
-
-            // promote three of a kind up
-            if cards_map.values().any(|&count| count == 3) {
-                let card_to_promote = cards_map.iter().find(|&(_, &count)| count == 3).unwrap().0;
-                return self.given_cards.iter().map(|c| if (*c).eq(&'J') {*card_to_promote} else {*c}).collect::<Vec<char>>();
-            }
-
-            println!("{:?}", self.given_cards);
-            return Vec::new();
+        if using_joker {
+            hoc.joker_cards = hoc.joker_deck();
         }
 
-        self.given_cards.clone()
+        hoc
     }
 
-    fn cards_map(&self) -> std::collections::HashMap<char, usize> {
-        let mut cards_map: std::collections::HashMap<char, usize> = std::collections::HashMap::new();
-        let cards_to_look: Vec<char> = if self.using_joker {self.joker_cards()} else {self.given_cards.clone()};
-
-        for card in cards_to_look {
-            *cards_map.entry(card).or_insert(0) += 1;
+    fn joker_deck(&self) -> Vec<char> {
+        if !self.given_cards.contains(&'J') {
+            return self.given_cards.clone();
         }
 
-        cards_map
+        let cards = self.given_cards.iter().filter(|&c| !c.eq(&'J')).map(|c| *c).collect::<Vec<char>>();
+        let faces = Vec::from(['A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2']);
+        let steps = 5 - cards.len();
+
+        let mut decks = Vec::from([cards.clone()]);
+
+        for _ in 0..steps {
+            decks = decks.iter().map(|deck| {
+                faces.iter().map(|face| {
+                    let mut new_deck = deck.clone();
+                    new_deck.push(*face);
+                    new_deck
+                })
+            }).flatten().collect()
+        }
+
+        let mut hands = decks.iter().map(|d| HandOfCards::create(d.clone(), false, 0)).collect::<Vec<HandOfCards>>();
+        hands.sort_by(|a, b| a.compare_by_type(&b, false));
+        hands.iter().last().unwrap().given_cards.clone()
+    }
+
+    fn cards(&self) -> std::collections::HashMap<char, usize> {
+        let mut cards: std::collections::HashMap<char, usize> = std::collections::HashMap::new();
+        let cards_to_look: Vec<char> = if self.using_joker {self.joker_cards.clone()} else {self.given_cards.clone()};
+
+        for card in cards_to_look {
+            *cards.entry(card).or_insert(0) += 1;
+        }
+
+        cards
     }
 
     fn hand_type(&self) -> String {
@@ -101,7 +120,7 @@ impl HandOfCards {
             return "is_three_of_a_kind".to_string();
         }
 
-        if self.cards_map().values().filter(|&count| count == &2).count() == 2 {
+        if self.cards().values().filter(|&count| count == &2).count() == 2 {
             return "is_two_pairs".to_string();
         }
 
@@ -113,7 +132,7 @@ impl HandOfCards {
     }
 
     fn is_x_of_a_kind(&self, x: usize) -> bool {
-        self.cards_map().values().any(|&count| count == x)
+        self.cards().values().any(|&count| count == x)
     }
 
     fn cards_strength(&self) -> usize {
@@ -129,14 +148,17 @@ impl HandOfCards {
         }
     }
 
-    fn compare_by_type(&self, other: &HandOfCards) -> std::cmp::Ordering {
+    fn compare_by_type(&self, other: &HandOfCards, compare_by_cards: bool) -> std::cmp::Ordering {
         if self.cards_strength() > other.cards_strength() {
             return std::cmp::Ordering::Greater;
         } else if self.cards_strength() < other.cards_strength() {
             return std::cmp::Ordering::Less;
         }
 
-        self.compare_by_cards(other)
+        match compare_by_cards {
+            true => self.compare_by_cards(other),
+            false => std::cmp::Ordering::Equal,
+        }
     }
 
     fn compare_by_cards(&self, other: &HandOfCards) -> std::cmp::Ordering {
