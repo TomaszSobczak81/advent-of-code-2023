@@ -1,5 +1,7 @@
 use array2d::Array2D;
 use clap::Args;
+use grid::grid;
+use grid::Grid;
 use std::time::Instant;
 
 pub mod day1;
@@ -12,6 +14,7 @@ pub mod day7;
 pub mod day8;
 pub mod day9;
 pub mod day10;
+pub mod day11;
 
 pub trait Compute {
     fn compute_part_one(&self, version: String) -> String;
@@ -61,6 +64,17 @@ fn input_load(day: String, part: String, version: String) -> String {
 fn input_load_as_array2d(day: String, part: String, version: String) -> Array2D<char> {
     let input = crate::aoc::input_load(day, part, version);
     Array2D::from_rows(&input.lines().map(|l| l.chars().collect()).collect::<Vec<_>>()).unwrap()
+}
+
+fn input_load_as_grid(day: String, part: String, version: String) -> Grid<char> {
+    let input = crate::aoc::input_load(day, part, version);
+    let mut grid = grid![];
+
+    for l in input.lines() {
+        grid.push_row(l.chars().collect());
+    }
+
+    grid
 }
 
 fn math_gcd(a: usize, b: usize) -> usize {
