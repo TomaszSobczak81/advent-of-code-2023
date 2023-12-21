@@ -5,27 +5,12 @@ pub struct Day5;
 impl crate::aoc::Compute for Day5 {
     fn compute_part_one(&self, version: String) -> String {
         let almanac = self.input_load("1".to_string(), version.clone());
-        almanac.seeds.iter().map(|s| almanac.get_location_by_seed(*s)).min().unwrap().to_string()
+        almanac.seeds.iter().map(|s| almanac.process_map_path(*s, "seed".to_string(), 0).0).min().unwrap().to_string()
     }
 
     fn compute_part_two(&self, version: String) -> String {
         let almanac = self.input_load("2".to_string(), version.clone());
-        // almanac.seeds_ranges().iter().map(|s| almanac.get_location_by_seed(*s)).min().unwrap().to_string()
-
-        // for pair in self.seeds.chunks_exact(2) {
-        //     ranges.push(Range::create(pair[0], pair[1]));
-        //     seeds.append(&mut (pair[0]..pair[0] + pair[1]).collect());
-        // }
-
-        for c in almanac.seeds.chunks_exact(2) {
-            let location_s = almanac.get_location_by_seed(c[0]);
-            let location_t = almanac.get_location_by_seed(c[0] + c[1] - 1);
-            println!("{:?} {:?}", c[0], location_s);
-            println!("{:?} {:?}", c[0] + c[1] - 1, location_t);
-            println!("------------------");
-        }
-
-        almanac.seeds_ranges().iter().map(|s| almanac.get_location_by_seed(*s)).min().unwrap().to_string()
+        almanac.seeds_ranges().iter().map(|r| almanac.process_map_path_range(r)).min().unwrap().to_string()
     }
 }
 
@@ -93,17 +78,44 @@ struct Map {
 }
 
 impl Map {
-    fn convert_src_to_dst(&self, src: usize) -> usize {
+    fn convert_src_to_dst(&self, src: usize) -> (usize, usize) {
         let mut dst = src;
+        let mut end = src;
 
-        for converter in self.converters.iter() {
+        for converter in self.converters_without_gaps().iter() {
             if src >= converter.src.min && src <= converter.src.max {
                 dst = converter.dst.min + (src - converter.src.min);
+                end = converter.src.max - src;
                 break;
             }
         }
 
-        dst
+        (dst, end)
+    }
+
+    fn converters_sorted_by_src(&self) -> Vec<Converter> {
+        let mut converters = self.converters.clone();
+        converters.sort_by(|a, b| a.src.min.cmp(&b.src.min));
+        converters
+    }
+
+    fn converters_without_gaps(&self) -> Vec<Converter> {
+        let mut converters = Vec::new();
+        let mut last = 0 as usize;
+
+        for converter in self.converters_sorted_by_src().iter() {
+            if converter.src.min > last {
+                converters.push(Converter {
+                    src: Range::create(last, converter.src.min),
+                    dst: Range::create(last, converter.src.min)
+                });
+            }
+
+            converters.push(converter.clone());
+            last = converter.src.max + 1;
+        }
+
+        converters
     }
 }
 
@@ -121,31 +133,54 @@ struct Almanac {
 }
 
 impl Almanac {
-    fn get_location_by_seed(&self, seed: usize) -> usize {
-        let soil = self.seed_to_soil_map.convert_src_to_dst(seed);
-        let fertilizer = self.soil_to_fertilizer_map.convert_src_to_dst(soil);
-        let water = self.fertilizer_to_water_map.convert_src_to_dst(fertilizer);
-        let light = self.water_to_light_map.convert_src_to_dst(water);
-        let temperature = self.light_to_temperature_map.convert_src_to_dst(light);
-        let humidity = self.temperature_to_humidity_map.convert_src_to_dst(temperature);
-        let location = self.humidity_to_location_map.convert_src_to_dst(humidity);
+    fn process_map_path(&self, value: usize, item: String, mut flow: usize) -> (usize, usize) {
+        let (curr, skip) = match item.as_str() {
+            "seed" => self.seed_to_soil_map.convert_src_to_dst(value),
+            "soil" => self.soil_to_fertilizer_map.convert_src_to_dst(value),
+            "fertilizer" => self.fertilizer_to_water_map.convert_src_to_dst(value),
+            "water" => self.water_to_light_map.convert_src_to_dst(value),
+            "light" => self.light_to_temperature_map.convert_src_to_dst(value),
+            "temperature" => self.temperature_to_humidity_map.convert_src_to_dst(value),
+            "humidity" => self.humidity_to_location_map.convert_src_to_dst(value),
+            _ => (value, flow)
+        };
 
-        location
+        flow = *Vec::from(&[flow, skip]).iter().min().unwrap();
+
+        match item.as_str() {
+            "seed" => self.process_map_path(curr, "soil".to_string(), flow),
+            "soil" => self.process_map_path(curr, "fertilizer".to_string(), flow),
+            "fertilizer" => self.process_map_path(curr, "water".to_string(), flow),
+            "water" => self.process_map_path(curr, "light".to_string(), flow),
+            "light" => self.process_map_path(curr, "temperature".to_string(), flow),
+            "temperature" => self.process_map_path(curr, "humidity".to_string(), flow),
+            "humidity" => self.process_map_path(curr, "location".to_string(), flow),
+            _ => (curr, flow)
+        }
     }
 
-    fn seeds_ranges(&self) -> Vec<usize> {
+    fn process_map_path_range(&self, seed_range: &Range) -> usize {
+        let mut cur = seed_range.min;
+        let mut max = seed_range.max;
+        let mut val = Vec::new();
+
+        while cur <= max {
+            let (loc, skp) = self.process_map_path(cur, "seed".to_string(), usize::MAX);
+            cur += skp + 1;
+            val.push(loc);
+        }
+
+        *val.iter().min().unwrap()
+    }
+
+    fn seeds_ranges(&self) -> Vec<Range> {
         let mut ranges = Vec::new();
-        let mut seeds = Vec::new();
 
         for pair in self.seeds.chunks_exact(2) {
             ranges.push(Range::create(pair[0], pair[1]));
-            seeds.append(&mut (pair[0]..pair[0] + pair[1]).collect());
         }
 
-        // println!("{:?} {:?}", ranges, 1);
-
-        seeds
-        // [79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67].iter().map(|s| *s as usize).collect()
+        ranges
     }
 
     fn set_map_converters(&mut self, map: String, converters: Vec<Converter>) {
