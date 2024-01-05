@@ -40,6 +40,7 @@ impl Day12 {
 
 struct Spring {
     pattern: String,
+    subsets: Vec<usize>,
     subsets_rgx: Regex,
     subsets_sum: usize,
 }
@@ -49,7 +50,7 @@ impl Spring {
         let subsets_rgx = Regex::new(&subsets.iter().map(|s| "#".repeat(*s)).collect::<Vec<String>>().join("[^#]+")).unwrap();
         let subsets_sum = subsets.iter().sum::<usize>();
 
-        Self { pattern, subsets_sum, subsets_rgx }
+        Self { pattern, subsets, subsets_sum, subsets_rgx }
     }
 
     fn count_possible_arrangements(&self) -> usize {
@@ -57,27 +58,55 @@ impl Spring {
     }
 
     fn possible_pattern_permutations(&self) -> HashSet<String> {
-        let unknown_springs: usize = self.pattern.matches("?").count();
-        let damaged_springs: usize = self.pattern.matches("#").count();
+        let damaged_springs_sets: Vec<String> = self.subsets.iter().map(|s| "#".repeat(*s)).collect();
+        let working_springs_sets: Vec<String> = self.pattern.split(&['?', '#']).map(|s| s.to_string()).filter(|s| !s.is_empty()).collect::<Vec<String>>();
+        let missing_springs_sets: Vec<String> = vec![".".to_string(); self.pattern.len() - (self.subsets_sum + working_springs_sets.join("").len())];
 
-        let damaged_missing_springs: usize = self.subsets_sum - damaged_springs;
-        let working_missing_springs: usize = unknown_springs - damaged_missing_springs;
-        let unknown_missing_springs: Vec<String> = vec!["#"; damaged_missing_springs].into_iter().chain(vec!["."; working_missing_springs].into_iter()).map(|s| s.to_string()).collect();
+        let mut permutations_set: Vec<String> = Vec::new();
+        permutations_set.extend(damaged_springs_sets);
+        permutations_set.extend(working_springs_sets);
+        permutations_set.extend(missing_springs_sets);
 
-        println!("pattern: {:?}, ?: {:?}, permutations: {:?}", self.pattern, unknown_springs, (1..=unknown_springs).product::<usize>());
+        println!("permutations_set: {:?}", permutations_set);
 
         let mut permutations: HashSet<String> = HashSet::new();
 
-        for p in unknown_missing_springs.iter().permutations(unknown_springs) {
-            let p = self.fill_pattern_with_permutation(&p.into_iter().join(""));
+        for p in permutations_set.iter().permutations(permutations_set.len()) {
+            // let p = self.fill_pattern_with_permutation(&p.into_iter().join(""));
+            let p = &p.into_iter().join("");
+            println!("p: {:?}", p);
             if self.validate_spring_against_pattern(&p) {
-                permutations.insert(p);
+                permutations.insert(p.to_string());
             }
         }
 
+        println!("permutations: {:?}", permutations);
 
         permutations
     }
+
+    // fn possible_pattern_permutations(&self) -> HashSet<String> {
+    //     let unknown_springs: usize = self.pattern.matches("?").count();
+    //     let damaged_springs: usize = self.pattern.matches("#").count();
+
+    //     let damaged_missing_springs: usize = self.subsets_sum - damaged_springs;
+    //     let working_missing_springs: usize = unknown_springs - damaged_missing_springs;
+    //     let unknown_missing_springs: Vec<String> = vec!["#"; damaged_missing_springs].into_iter().chain(vec!["."; working_missing_springs].into_iter()).map(|s| s.to_string()).collect();
+
+    //     println!("pattern: {:?}, ?: {:?}, permutations: {:?}", self.pattern, unknown_springs, (1..=unknown_springs).product::<usize>());
+
+    //     let mut permutations: HashSet<String> = HashSet::new();
+
+    //     for p in unknown_missing_springs.iter().permutations(unknown_springs) {
+    //         let p = self.fill_pattern_with_permutation(&p.into_iter().join(""));
+    //         if self.validate_spring_against_pattern(&p) {
+    //             permutations.insert(p);
+    //         }
+    //     }
+
+
+    //     permutations
+    // }
 
     fn fill_pattern_with_permutation(&self, permutation: &String) -> String {
         let mut pattern = self.pattern.clone();
