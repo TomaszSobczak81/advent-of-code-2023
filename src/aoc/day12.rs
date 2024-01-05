@@ -4,18 +4,18 @@ pub struct Day12;
 
 impl crate::aoc::Compute for Day12 {
     fn compute_part_one(&self, version: String) -> String {
-        let springs = self.input_load("1".to_string(), version.clone());
+        let springs = self.input_load("1".to_string(), version.clone(), false);
         springs.iter().map(|s| s.count_possible_arrangements()).sum::<usize>().to_string()
     }
 
     fn compute_part_two(&self, version: String) -> String {
-        let springs = self.input_load("1".to_string(), version.clone());
+        let springs = self.input_load("1".to_string(), version.clone(), true);
         springs.iter().map(|s| s.count_possible_arrangements()).sum::<usize>().to_string()
     }
 }
 
 impl Day12 {
-    fn input_load(&self, part: String, version: String) -> Vec<Spring> {
+    fn input_load(&self, part: String, version: String, unfold: bool) -> Vec<Spring> {
         let mut springs: Vec<Spring> = vec![];
 
         for line in crate::aoc::input_load("12".to_string(), part, version).lines() {
@@ -23,7 +23,19 @@ impl Day12 {
             let pattern: String = parts.next().unwrap().to_string();
             let subsets: Vec<usize> = parts.next().unwrap().split(",").map(|s| s.trim().parse::<usize>().unwrap()).collect();
 
-            springs.push(Spring::new(pattern, subsets));
+            match unfold {
+                false => springs.push(Spring::new(pattern, subsets)),
+                true => {
+                    let unfolded_pattern = vec![pattern; 5].join("?");
+                    let mut unfolded_subsets = Vec::new();
+
+                    for _ in 1..=5 {
+                        unfolded_subsets.extend(subsets.clone());
+                    }
+
+                    springs.push(Spring::new(unfolded_pattern, unfolded_subsets));
+                }
+            }
         }
 
         springs
@@ -33,14 +45,16 @@ impl Day12 {
 struct Spring {
     pattern: String,
     pattern_rgx: Regex,
+    damaged_len: usize,
 }
 
 impl Spring {
     fn new(pattern: String, subsets: Vec<usize>) -> Self {
         let springs_rgx = subsets.iter().map(|s| format!("[#]{{{}}}", *s)).collect::<Vec<String>>().join("[^#]+");
         let pattern_rgx = Regex::new(&format!(r"^(\.*){}(\.*)$", springs_rgx)).unwrap();
+        let damaged_len = subsets.iter().sum::<usize>();
 
-        Self { pattern, pattern_rgx }
+        Self { pattern, pattern_rgx, damaged_len }
     }
 
     fn count_possible_arrangements(&self) -> usize {
@@ -51,8 +65,16 @@ impl Spring {
         let mut local_sum = sum;
 
         if arrangement.contains("?") {
-            for c in ['.', '#'].iter() {
-                local_sum = self.process_arrangement(arrangement.replacen("?", &c.to_string(), 1), local_sum);
+            let damaged_count = arrangement.matches("#").count();
+            let unknown_count = arrangement.matches("?").count();
+
+            if damaged_count >= self.damaged_len {
+                local_sum = self.process_arrangement(arrangement.replace("?", "."), local_sum);
+            } else if damaged_count + unknown_count == self.damaged_len {
+                local_sum = self.process_arrangement(arrangement.replace("?", "#"), local_sum);
+            } else  {
+                local_sum = self.process_arrangement(arrangement.replacen("?", "#", 1), local_sum);
+                local_sum = self.process_arrangement(arrangement.replacen("?", ".", 1), local_sum);
             }
 
             return local_sum;
