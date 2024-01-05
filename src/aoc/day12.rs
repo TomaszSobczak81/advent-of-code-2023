@@ -26,8 +26,12 @@ impl Day12 {
             match unfold {
                 false => springs.push(Spring::new(pattern, subsets)),
                 true => {
-                    let unfolded_pattern = vec![pattern; 5].join("?");
+                    let mut unfolded_pattern = vec![pattern.clone(); 5].join("?");
                     let mut unfolded_subsets = Vec::new();
+
+                    if pattern.starts_with("#") || pattern.ends_with("#") {
+                        unfolded_pattern = vec![pattern.clone(); 5].join(".");
+                    }
 
                     for _ in 1..=5 {
                         unfolded_subsets.extend(subsets.clone());
