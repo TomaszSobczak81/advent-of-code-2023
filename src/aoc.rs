@@ -15,6 +15,7 @@ pub mod day8;
 pub mod day9;
 pub mod day10;
 pub mod day11;
+pub mod day12;
 
 pub trait Compute {
     fn compute_part_one(&self, version: String) -> String;
