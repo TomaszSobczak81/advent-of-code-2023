@@ -49,10 +49,18 @@ struct Spring {
 }
 
 impl Spring {
-    fn new(pattern: String, subsets: Vec<usize>) -> Self {
+    fn new(mut pattern: String, subsets: Vec<usize>) -> Self {
         let springs_rgx = subsets.iter().map(|s| format!("[#]{{{}}}", *s)).collect::<Vec<String>>().join("[^#]+");
         let pattern_rgx = Regex::new(&format!(r"^(\.*){}(\.*)$", springs_rgx)).unwrap();
         let damaged_len = subsets.iter().sum::<usize>();
+
+        if pattern.starts_with("#") {
+            pattern.replace_range(..=subsets[0], format!("{}{}", &"#".repeat(subsets[0]), ".").as_str());
+        }
+
+        if pattern.ends_with("#") {
+            pattern.replace_range(pattern.len() - subsets.last().unwrap() - 1.., format!("{}{}", ".", &"#".repeat(*subsets.last().unwrap())).as_str());
+        }
 
         Self { pattern, pattern_rgx, damaged_len }
     }
@@ -72,7 +80,7 @@ impl Spring {
                 local_sum = self.process_arrangement(arrangement.replace("?", "."), local_sum);
             } else if damaged_count + unknown_count == self.damaged_len {
                 local_sum = self.process_arrangement(arrangement.replace("?", "#"), local_sum);
-            } else  {
+            } else {
                 local_sum = self.process_arrangement(arrangement.replacen("?", "#", 1), local_sum);
                 local_sum = self.process_arrangement(arrangement.replacen("?", ".", 1), local_sum);
             }
