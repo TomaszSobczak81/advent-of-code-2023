@@ -22,3 +22,6 @@ To run and check solution after exec into container you need to use some CLI com
 * Use `cargo run day8` to solve Day 8 solutions ([Haunted Wasteland](https://adventofcode.com/2023/day/8))
 * Use `cargo run day9` to solve Day 9 solutions ([Mirage Maintenance](https://adventofcode.com/2023/day/9))
 * Use `cargo run day10` to solve Day 10 solutions ([Pipe Maze](https://adventofcode.com/2023/day/10))
+* Use `cargo run day11` to solve Day 11 solutions ([Cosmic Expansion](https://adventofcode.com/2023/day/11))
+* Use `cargo run day12` to solve Day 12 solutions ([Hot Springs](https://adventofcode.com/2023/day/12))
+* Use `cargo run day13` to solve Day 13 solutions ([Point of Incidence](https://adventofcode.com/2023/day/13))
