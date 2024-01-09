@@ -22,6 +22,7 @@ enum Commands {
     Day10(crate::aoc::Task),
     Day11(crate::aoc::Task),
     Day12(crate::aoc::Task),
+    Day13(crate::aoc::Task),
 }
 
 fn main() {
@@ -40,6 +41,7 @@ fn main() {
         Some(Commands::Day10(task)) => task.solve(&crate::aoc::day10::Day10, "8".to_string(), "4".to_string()),
         Some(Commands::Day11(task)) => task.solve(&crate::aoc::day11::Day11, "374".to_string(), "82000210".to_string()),
         Some(Commands::Day12(task)) => task.solve(&crate::aoc::day12::Day12, "21".to_string(), "525152".to_string()),
+        Some(Commands::Day13(task)) => task.solve(&crate::aoc::day13::Day13, "405".to_string(), "400".to_string()),
         None => println!("No command provided"),
     }
 }
