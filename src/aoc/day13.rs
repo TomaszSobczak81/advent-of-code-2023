@@ -81,25 +81,24 @@ impl Pattern {
         refl
     }
 
-    fn find_horizontal_reflection_score(&self, grid: &Grid<char>) -> usize {
-        self.find_reflection_score(grid, 0) * 100
+    fn find_horizontal_reflection_score(&self, grid: &Grid<char>, refl_min: usize) -> usize {
+        self.find_reflection_score(grid, refl_min) * 100
     }
 
-    fn find_vertical_reflection_score(&self, grid: &Grid<char>) -> usize {
+    fn find_vertical_reflection_score(&self, grid: &Grid<char>, refl_min: usize) -> usize {
         let mut mgrid = grid.clone();
         mgrid.transpose();
 
-        self.find_reflection_score(&mgrid, 0)
+        self.find_reflection_score(&mgrid, refl_min)
     }
 
     fn reflection_score(&self) -> usize {
-        match self.find_horizontal_reflection_score(&self.grid) {
-            0 => self.find_vertical_reflection_score(&self.grid),
+        match self.find_horizontal_reflection_score(&self.grid, 0) {
+            0 => self.find_vertical_reflection_score(&self.grid, 0),
             s => s,
         }
     }
 
-    // FIXME: Not working (live score too high, some smudges are not found)
     fn reflection_score_without_smudge(&self) -> usize {
         let score = self.reflection_score();
         let swaps = HashMap::from([('.', '#'), ('#', '.')]);
@@ -108,13 +107,20 @@ impl Pattern {
             let mut grid = self.grid.clone();
             grid[(row, col)] = *swaps.get(val).unwrap();
 
-            let score_without_smudge = match self.find_horizontal_reflection_score(&grid) {
-                0 => self.find_vertical_reflection_score(&grid),
+            let mut score_without_smudge = match self.find_horizontal_reflection_score(&grid, 0) {
+                0 => self.find_vertical_reflection_score(&grid, 0),
                 s => s,
             };
 
+            // FIXME: This is a hack to avoid the case where the reflection score is calculated before valid refcetion without smudge score
+            if score_without_smudge == score {
+                score_without_smudge = match self.find_horizontal_reflection_score(&grid, score / 100) {
+                    0 => self.find_vertical_reflection_score(&grid, score % 100),
+                    s => s,
+                };
+            }
+
             if score_without_smudge != 0 && score_without_smudge != score {
-                println!("{} {} {} {}", row, col, score, score_without_smudge);
                 return score_without_smudge;
             }
         }
