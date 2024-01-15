@@ -112,7 +112,7 @@ impl Pattern {
                 s => s,
             };
 
-            // FIXME: This is a hack to avoid the case where the reflection score is calculated before valid refcetion without smudge score
+            // FIXME: This is a hack to avoid the case where the reflection score is calculated before valid reflection without smudge score
             if score_without_smudge == score {
                 score_without_smudge = match self.find_horizontal_reflection_score(&grid, score / 100) {
                     0 => self.find_vertical_reflection_score(&grid, score % 100),
