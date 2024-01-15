@@ -87,6 +87,10 @@ fn math_lcm(a: usize, b: usize) -> usize {
     (a * b) / math_gcd(a, b)
 }
 
+fn print_grid(grid: &Grid<char>) {
+    println!("{}", grid.iter_rows().map(|r| r.into_iter().collect::<String>()).collect::<Vec<_>>().join("\n"));
+}
+
 fn str_reverse(s: &str) -> String {
     s.chars().rev().collect::<String>()
 }
