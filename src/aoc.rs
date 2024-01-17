@@ -17,6 +17,7 @@ pub mod day10;
 pub mod day11;
 pub mod day12;
 pub mod day13;
+pub mod day14;
 
 pub trait Compute {
     fn compute_part_one(&self, version: String) -> String;
@@ -87,6 +88,7 @@ fn math_lcm(a: usize, b: usize) -> usize {
     (a * b) / math_gcd(a, b)
 }
 
+#[allow(dead_code)]
 fn print_grid(grid: &Grid<char>) {
     println!("{}", grid.iter_rows().map(|r| r.into_iter().collect::<String>()).collect::<Vec<_>>().join("\n"));
 }
