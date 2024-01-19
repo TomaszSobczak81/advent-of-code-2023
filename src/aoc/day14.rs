@@ -10,13 +10,30 @@ impl crate::aoc::Compute for Day14 {
     }
 
     fn compute_part_two(&self, version: String) -> String {
-        "TODO".to_string()
+        let mut dish = self.input_load("1".to_string(), version.clone());
+        dish.find_tilting_cycle().value_at(999999999).to_string()
     }
 }
 
 impl Day14 {
     fn input_load(&self, part: String, version: String) -> Dish {
         Dish::new(crate::aoc::input_load_as_grid("14".to_string(), part, version))
+    }
+}
+
+struct Cycle {
+    cycle: Vec<usize>,
+    start: usize
+}
+
+impl Cycle {
+    fn new(cycle: Vec<usize>, start: usize) -> Self {
+        Self { cycle, start }
+    }
+
+    fn value_at(&self, index: usize) -> usize {
+        let i = (index - self.start) % self.cycle.len();
+        self.cycle[i]
     }
 }
 
@@ -27,6 +44,25 @@ struct Dish {
 impl Dish {
     fn new(grid: Grid<char>) -> Self {
         Self { grid }
+    }
+
+    fn find_tilting_cycle(&mut self) -> Cycle {
+        let mut loads: Vec<usize> = Vec::new();
+
+        loop {
+            self.tilt_cycle();
+            let load = self.total_load();
+
+            if let Some(p) = loads.iter().rposition(|&x| x == load) {
+                let d = loads.len() - 1 - p;
+
+                if (1..p).contains(&d) && &loads[p-d..p] == &loads[p+1..] {
+                    break Cycle::new(loads[p-d..=p].to_vec(), p-d)
+                }
+            }
+
+            loads.push(load);
+        }
     }
 
     fn roll_the_rocks(&self, before: Grid<char>) -> Grid<char> {
@@ -47,10 +83,33 @@ impl Dish {
         after
     }
 
+    fn tilt_cycle(&mut self) {
+        self.tilt_north();
+        self.tilt_west();
+        self.tilt_south();
+        self.tilt_east();
+    }
+
+    fn tilt_east(&mut self) {
+        self.grid.flip_cols();
+        self.grid = self.roll_the_rocks(self.grid.clone());
+        self.grid.flip_cols();
+    }
+
     fn tilt_north(&mut self) {
         self.grid.rotate_left();
         self.grid = self.roll_the_rocks(self.grid.clone());
         self.grid.rotate_right();
+    }
+
+    fn tilt_south(&mut self) {
+        self.grid.rotate_right();
+        self.grid = self.roll_the_rocks(self.grid.clone());
+        self.grid.rotate_left();
+    }
+
+    fn tilt_west(&mut self) {
+        self.grid = self.roll_the_rocks(self.grid.clone());
     }
 
     fn total_load(&self) -> usize {
