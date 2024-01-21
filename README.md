@@ -26,3 +26,4 @@ To run and check solution after exec into container you need to use some CLI com
 * Use `cargo run day12` to solve Day 12 solutions ([Hot Springs](https://adventofcode.com/2023/day/12))
 * Use `cargo run day13` to solve Day 13 solutions ([Point of Incidence](https://adventofcode.com/2023/day/13))
 * Use `cargo run day14` to solve Day 14 solutions ([Parabolic Reflector Dish](https://adventofcode.com/2023/day/14))
+* Use `cargo run day15` to solve Day 15 solutions ([Lens Library](https://adventofcode.com/2023/day/15))
