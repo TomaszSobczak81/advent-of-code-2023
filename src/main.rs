@@ -45,7 +45,7 @@ fn main() {
         Some(Commands::Day12(task)) => task.solve(&crate::aoc::day12::Day12, "21".to_string(), "525152".to_string()),
         Some(Commands::Day13(task)) => task.solve(&crate::aoc::day13::Day13, "405".to_string(), "400".to_string()),
         Some(Commands::Day14(task)) => task.solve(&crate::aoc::day14::Day14, "136".to_string(), "64".to_string()),
-        Some(Commands::Day15(task)) => task.solve(&crate::aoc::day15::Day15, "1320".to_string(), "".to_string()),
+        Some(Commands::Day15(task)) => task.solve(&crate::aoc::day15::Day15, "1320".to_string(), "145".to_string()),
         None => println!("No command provided"),
     }
 }
