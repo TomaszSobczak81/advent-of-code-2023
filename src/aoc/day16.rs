@@ -6,12 +6,37 @@ pub struct Day16;
 impl crate::aoc::Compute for Day16 {
     fn compute_part_one(&self, version: String) -> String {
         let mut contraption = self.input_load("1".to_string(), version.clone());
-        contraption.run();
+        contraption.run(Beam::new(Point::new(-1, 0), Compass::EAST));
         contraption.count_energized_tiles().to_string()
     }
 
     fn compute_part_two(&self, version: String) -> String {
-        "TODO".to_string()
+        let contraption = self.input_load("1".to_string(), version.clone());
+        let mut results: Vec<usize> = Vec::new();
+
+        for x in 0..contraption.grid.cols() {
+            let mut cs = contraption.clone();
+            let mut cn = contraption.clone();
+
+            cs.run(Beam::new(Point::new(x as isize, -1), Compass::SOUTH));
+            cn.run(Beam::new(Point::new(x as isize, contraption.grid.rows() as isize), Compass::NORTH));
+
+            results.push(cs.count_energized_tiles());
+            results.push(cn.count_energized_tiles());
+        }
+
+        for y in 0..contraption.grid.rows() {
+            let mut cw = contraption.clone();
+            let mut ce = contraption.clone();
+
+            ce.run(Beam::new(Point::new(-1, y as isize), Compass::EAST));
+            cw.run(Beam::new(Point::new(contraption.grid.cols() as isize, y as isize), Compass::WEST));
+
+            results.push(ce.count_energized_tiles());
+            results.push(cw.count_energized_tiles());
+        }
+
+        results.iter().max().unwrap_or(&0).to_string()
     }
 }
 
@@ -101,6 +126,7 @@ impl Beam {
     }
 }
 
+#[derive(Clone)]
 struct Contraption {
     grid: Grid<char>,
     copy: Grid<char>,
@@ -124,8 +150,8 @@ impl Contraption {
         point.x >= 0 && point.x < self.grid.cols() as isize && point.y >= 0 && point.y < self.grid.rows() as isize
     }
 
-    fn run(&mut self) {
-        self.track_beam(Beam::new(Point::new(-1, 0), Compass::EAST));
+    fn run(&mut self, b: Beam) {
+        self.track_beam(b);
     }
 
     fn split_beam(&mut self, p: Point) {
