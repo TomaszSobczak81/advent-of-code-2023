@@ -28,3 +28,4 @@ To run and check solution after exec into container you need to use some CLI com
 * Use `cargo run day14` to solve Day 14 solutions ([Parabolic Reflector Dish](https://adventofcode.com/2023/day/14))
 * Use `cargo run day15` to solve Day 15 solutions ([Lens Library](https://adventofcode.com/2023/day/15))
 * Use `cargo run day16` to solve Day 16 solutions ([The Floor Will Be Lava](https://adventofcode.com/2023/day/16))
+* Use `cargo run day17` to solve Day 17 solutions ([Clumsy Crucible](https://adventofcode.com/2023/day/17))
